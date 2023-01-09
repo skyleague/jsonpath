@@ -1,4 +1,4 @@
-# Axioms [_(@skyleague/jsonpath)_](https://skyleague.github.io/jsonpath/)
+# JSONPath [_(@skyleague/jsonpath)_](https://skyleague.github.io/jsonpath/)
 
 <p>
   <img alt="Lines of code" src="https://img.shields.io/tokei/lines/github/skyleague/jsonpath" />
