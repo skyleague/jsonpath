@@ -1,4 +1,4 @@
-import { JSONPath } from '.'
+import { JSONPath } from './index.js'
 
 import type { DeepPartial } from '@skyleague/axioms'
 
