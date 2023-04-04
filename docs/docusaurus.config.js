@@ -31,6 +31,7 @@ const config = {
             {
                 projectRoot: require('path').join(__dirname, '..'),
                 packages: ['.'],
+                tsconfigName: 'tsconfig.docs.json',
             },
         ],
     ],
