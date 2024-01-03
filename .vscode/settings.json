@@ -20,7 +20,6 @@
     "**/.coverage": true,
     "**/.husky": true,
     "**/.dist": true,
-    "**/dist": true,
     "src/**/*.d.ts": true,
     "**/node_modules": true
   },
@@ -40,6 +39,7 @@
   "typescript.inlayHints.parameterNames.suppressWhenArgumentMatchesName": true,
   "typescript.referencesCodeLens.enabled": true,
   "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.preferences.autoImportFileExcludePatterns": ["**/index.ts"],
   "debug.javascript.terminalOptions": {
     "skipFiles": ["<node_internals>/**"],
     "sourceMaps": true,
