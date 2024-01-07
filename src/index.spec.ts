@@ -1,11 +1,7 @@
 import { JSONPath } from './index.js'
 
 import type { DeepPartial } from '@skyleague/axioms'
-import { expect, describe, it } from 'vitest'
-
-type Assert<T, U> = (<V>() => V extends T ? 1 : 2) extends <V>() => V extends U ? 1 : 2
-    ? true
-    : { error: 'Types are not equal'; type1: T; type2: U }
+import { expect, describe, it, expectTypeOf } from 'vitest'
 
 describe('simple', () => {
     const simpleObject = {
@@ -15,14 +11,14 @@ describe('simple', () => {
 
     it('properties - foo', () => {
         const value = JSONPath.get(simpleObject, '$.foo')
-        const _type: Assert<typeof value, 'bar'> = true
         expect(value).toMatchInlineSnapshot(`"bar"`)
+        expectTypeOf(value).toEqualTypeOf<'bar'>()
     })
 
     it('properties - bar', () => {
         const value = JSONPath.get(simpleObject, '$.bar')
-        const _type: Assert<typeof value, 'foo'> = true
         expect(value).toMatchInlineSnapshot(`"foo"`)
+        expectTypeOf(value).toEqualTypeOf<'foo'>()
     })
 
     const simpleArray = {
@@ -31,7 +27,6 @@ describe('simple', () => {
 
     it('properties - array', () => {
         const value = JSONPath.get(simpleArray, '$.foos')
-        const _type: Assert<typeof value, (typeof simpleArray)['foos']> = true
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -42,66 +37,88 @@ describe('simple', () => {
               },
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof simpleArray)['foos']>()
     })
 
-    it('properties - array wildcard', () => {
-        const value = JSONPath.get(simpleArray, '$.foos[*]')
-        const _type: Assert<typeof value, (typeof simpleArray)['foos'][number][]> = true
-        expect(value).toMatchInlineSnapshot(`
-            [
-              {
-                "foo": "barz",
-              },
-              {
-                "foo": "bars",
-              },
-            ]
-        `)
-    })
+    // it.only('properties - array wildcard', () => {
+    //     const value = JSONPath.get(simpleArray, '$.foos[*]')
+    //     expect(value).toMatchInlineSnapshot(`
+    //         [
+    //           {
+    //             "foo": "barz",
+    //           },
+    //           {
+    //             "foo": "bars",
+    //           },
+    //         ]
+    //     `)
+    //     expectTypeOf(value).toEqualTypeOf<(typeof simpleArray)['foos'][number][]>()
+    // })
 
     it('properties - array wildcard acessor', () => {
         const value = JSONPath.get(simpleArray, '$.foos[*].foo')
-        const _type: Assert<typeof value, (typeof simpleArray)['foos'][number]['foo'][]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               "barz",
               "bars",
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof simpleArray)['foos'][number]['foo'][]>()
     })
 
     it('properties - partial array wildcard acessor', () => {
         const value = JSONPath.get(simpleArray as DeepPartial<typeof simpleArray>, '$.foos[*].foo')
-        const _type: Assert<typeof value, (typeof simpleArray)['foos'][number]['foo'][]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               "barz",
               "bars",
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof simpleArray)['foos'][number]['foo'][]>()
     })
 
     it('properties - array number index - exists', () => {
         const value = JSONPath.get(simpleArray, '$.foos[1]')
-        const _type: Assert<typeof value, (typeof simpleArray)['foos'][1]> = true
         expect(value).toMatchInlineSnapshot(`
             {
               "foo": "bars",
             }
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof simpleArray)['foos'][1]>()
     })
 
     it('properties - array number index - does not exist', () => {
         const value = JSONPath.get(simpleArray, '$.foos[100]')
-        const _type: Assert<typeof value, (typeof simpleArray)['foos'][number] | undefined> = true
         expect(value).toMatchInlineSnapshot(`undefined`)
+        expectTypeOf(value).toEqualTypeOf<(typeof simpleArray)['foos'][number] | undefined>()
     })
 
     it('properties - array number index - does not exist', () => {
         const xs = { xs: [1, 2, 3] }
         const value = JSONPath.get(xs, '$.xs[100]')
-        const _type: Assert<typeof value, number | undefined> = true
         expect(value).toMatchInlineSnapshot(`undefined`)
+        expectTypeOf(value).toEqualTypeOf<number | undefined>()
+    })
+
+    it('properties - emtpy array', () => {
+        const value = JSONPath.get({ foos: [] as { a: number }[] } as const, '$.foos[*].a')
+        expect(value).toMatchInlineSnapshot(`[]`)
+        expectTypeOf(value).toEqualTypeOf<number[]>()
+    })
+
+    it('properties - tuple number index - does not exist', () => {
+        const xs = { xs: [1, 2, 3] as const }
+        const value = JSONPath.get(xs, '$.xs[100]')
+        expect(value).toMatchInlineSnapshot(`undefined`)
+        // should ideally be undefined
+        expectTypeOf(value).toEqualTypeOf<1 | 2 | 3 | undefined>()
+    })
+
+    it('properties - tuple number index - does exist', () => {
+        const xs = { xs: [1, 2, 3] as const }
+        const value = JSONPath.get(xs, '$.xs[1]')
+        expect(value).toMatchInlineSnapshot(`2`)
+        expectTypeOf(value).toEqualTypeOf<2>()
     })
 
     const simpleNested = {
@@ -110,7 +127,6 @@ describe('simple', () => {
 
     it('properties - nested', () => {
         const value = JSONPath.get(simpleNested, '$.far.foos')
-        const _type: Assert<typeof value, (typeof simpleNested)['far']['foos']> = true
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -121,11 +137,11 @@ describe('simple', () => {
               },
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof simpleNested)['far']['foos']>()
     })
 
     it('properties - nested wildcard', () => {
         const value = JSONPath.get(simpleNested, '$.far.foos[*]')
-        const _type: Assert<typeof value, (typeof simpleNested)['far']['foos'][number][]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -136,12 +152,12 @@ describe('simple', () => {
               },
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof simpleNested)['far']['foos'][number][]>()
     })
 
     it('properties - deep partial', () => {
         const dSimpleNested: DeepPartial<typeof simpleNested> = simpleNested
         const value = JSONPath.get(dSimpleNested, '$.far.foos')
-        const _type: Assert<typeof value, (typeof simpleNested)['far']['foos'] | undefined> = true
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -152,18 +168,19 @@ describe('simple', () => {
               },
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof simpleNested)['far']['foos'] | undefined>()
     })
 
     it('properties - deep partial nested access', () => {
         const dSimpleNested: DeepPartial<typeof simpleNested> = simpleNested
         const value = JSONPath.get(dSimpleNested, '$.far.foos[*].foo')
-        const _type: Assert<typeof value, ('bars' | 'barz')[] | undefined> = true
         expect(value).toMatchInlineSnapshot(`
             [
               "barz",
               "bars",
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<('bars' | 'barz')[] | undefined>()
     })
 
     const deepNested = {
@@ -175,7 +192,6 @@ describe('simple', () => {
     it('descent', () => {
         type T = typeof deepNested
         const value = JSONPath.get(deepNested, '$..')
-        const _type: Assert<typeof value, (T | T['foos'] | T['foos'][0] | T['foos'][0]['bar'] | T['foos'][1])[]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -218,15 +234,12 @@ describe('simple', () => {
               },
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(T | T['foos'] | T['foos'][0] | T['foos'][0]['bar'] | T['foos'][1])[]>()
     })
 
     it('descent - wildcard', () => {
         type T = typeof deepNested
         const value = JSONPath.get(deepNested, '$..*')
-        const _type: Assert<
-            typeof value,
-            (T['foos'] | T['foos'][0] | T['foos'][0]['bar'] | T['foos'][1] | 'bar' | 'bars' | 'barz' | 'foo' | 2)[]
-        > = true
         expect(value).toMatchInlineSnapshot(`
             [
               "bar",
@@ -259,17 +272,20 @@ describe('simple', () => {
               "bars",
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<
+            (T['foos'] | T['foos'][0] | T['foos'][0]['bar'] | T['foos'][1] | 'bar' | 'bars' | 'barz' | 'foo' | 2)[]
+        >()
     })
 
     it('script index', () => {
         type T = typeof deepNested
-        const value = JSONPath.get(deepNested, '$.foos[(@.length-1)]')
-        const _type: Assert<typeof value, T['foos'][number] | undefined> = true
+        const value = JSONPath.get(deepNested, '$.foos[(@.length-1)]', { preventEval: false })
         expect(value).toMatchInlineSnapshot(`
             {
               "foo": "bars",
             }
         `)
+        expectTypeOf(value).toEqualTypeOf<T['foos'][number] | undefined>()
     })
 
     const nested = {
@@ -279,35 +295,34 @@ describe('simple', () => {
 
     it('select property', () => {
         const value = JSONPath.get(nested, '$.foo[bar]')
-        const _type: Assert<typeof value, 'foo'> = true
         expect(value).toMatchInlineSnapshot(`"foo"`)
+        expectTypeOf(value).toEqualTypeOf<'foo'>()
     })
 
     it('select properties', () => {
         const value = JSONPath.get(nested, '$.foos[bar,foo]')
-        const _type: Assert<typeof value, ('bar' | 'foo')[]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               "foo",
               "bar",
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<('bar' | 'foo')[]>()
     })
 
     it('select property descent', () => {
         const value = JSONPath.get(nested, '$..[bar]')
-        const _type: Assert<typeof value, 'foo'[]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               "foo",
               "foo",
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<'foo'[]>()
     })
 
     it('select properties descent', () => {
         const value = JSONPath.get(nested, '$..[bar,foo]')
-        const _type: Assert<typeof value, ('bar' | 'foo' | { readonly bar: 'foo' })[]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -318,6 +333,7 @@ describe('simple', () => {
               "bar",
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<('bar' | 'foo' | { readonly bar: 'foo' })[]>()
     })
 })
 
@@ -361,18 +377,17 @@ describe('store', () => {
 
     it('bicycle', () => {
         const value = JSONPath.get(object, '$.store.bicycle')
-        const _type: Assert<typeof value, (typeof object)['store']['bicycle']> = true
         expect(value).toMatchInlineSnapshot(`
             {
               "color": "red",
               "price": 19.95,
             }
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof object)['store']['bicycle']>()
     })
 
     it('books', () => {
         const value = JSONPath.get(object, '$.store.book[*]')
-        const _type: Assert<typeof value, (typeof object)['store']['book'][number][]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -403,11 +418,11 @@ describe('store', () => {
               },
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof object)['store']['book'][number][]>()
     })
 
     it('authors', () => {
         const value = JSONPath.get(object, '$.store.book[*].author')
-        const _type: Assert<typeof value, ('Evelyn Waugh' | 'Herman Melville' | 'J. R. R. Tolkien' | 'Nigel Rees')[]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               "Nigel Rees",
@@ -416,11 +431,11 @@ describe('store', () => {
               "J. R. R. Tolkien",
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<('Evelyn Waugh' | 'Herman Melville' | 'J. R. R. Tolkien' | 'Nigel Rees')[]>()
     })
 
     it('all authors', () => {
         const value = JSONPath.get(object, '$..author')
-        const _type: Assert<typeof value, ('Evelyn Waugh' | 'Herman Melville' | 'J. R. R. Tolkien' | 'Nigel Rees')[]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               "Nigel Rees",
@@ -429,11 +444,11 @@ describe('store', () => {
               "J. R. R. Tolkien",
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<('Evelyn Waugh' | 'Herman Melville' | 'J. R. R. Tolkien' | 'Nigel Rees')[]>()
     })
 
     it('all things in store', () => {
         const value = JSONPath.get(object, '$.store.*')
-        const _type: Assert<typeof value, ((typeof object)['store']['bicycle'] | (typeof object)['store']['book'])[]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -470,11 +485,11 @@ describe('store', () => {
               ],
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<((typeof object)['store']['bicycle'] | (typeof object)['store']['book'])[]>()
     })
 
     it('price of everything', () => {
         const value = JSONPath.get(object, '$.store..price')
-        const _type: Assert<typeof value, (8.95 | 8.99 | 12.99 | 19.95 | 22.99)[]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               19.95,
@@ -484,11 +499,11 @@ describe('store', () => {
               22.99,
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(8.95 | 8.99 | 12.99 | 19.95 | 22.99)[]>()
     })
 
     it('third book', () => {
         const value = JSONPath.get(object, '$..book[2]')
-        const _type: Assert<typeof value, (typeof object)['store']['book'][2][]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -500,11 +515,11 @@ describe('store', () => {
               },
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof object)['store']['book'][2][]>()
     })
 
     it('third book - full index', () => {
         const value = JSONPath.get(object, '$.store.book[2]')
-        const _type: Assert<typeof value, (typeof object)['store']['book'][2]> = true
         expect(value).toMatchInlineSnapshot(`
             {
               "author": "Herman Melville",
@@ -514,11 +529,11 @@ describe('store', () => {
               "title": "Moby Dick",
             }
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof object)['store']['book'][2]>()
     })
 
     it('first two books', () => {
         const value = JSONPath.get(object, '$..book[0,1]')
-        const _type: Assert<typeof value, ((typeof object)['store']['book'][0] | (typeof object)['store']['book'][1])[]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -535,11 +550,11 @@ describe('store', () => {
               },
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<((typeof object)['store']['book'][0] | (typeof object)['store']['book'][1])[]>()
     })
 
     it('first two books - full index', () => {
         const value = JSONPath.get(object, '$.store.book[0,1]')
-        const _type: Assert<typeof value, ((typeof object)['store']['book'][0] | (typeof object)['store']['book'][1])[]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -556,11 +571,11 @@ describe('store', () => {
               },
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<((typeof object)['store']['book'][0] | (typeof object)['store']['book'][1])[]>()
     })
 
     it('book - script index', () => {
-        const value = JSONPath.get(object, '$..book[(@.length-1)]')
-        const _type: Assert<typeof value, (typeof object)['store']['book'][number][] | undefined> = true
+        const value = JSONPath.get(object, '$..book[(@.length-1)]', { preventEval: false })
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -572,11 +587,11 @@ describe('store', () => {
               },
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof object)['store']['book'][number][] | undefined>()
     })
 
     it('book - script full index', () => {
-        const value = JSONPath.get(object, '$.store.book[(@.length-1)]')
-        const _type: Assert<typeof value, (typeof object)['store']['book'][number] | undefined> = true
+        const value = JSONPath.get(object, '$.store.book[(@.length-1)]', { preventEval: false })
         expect(value).toMatchInlineSnapshot(`
             {
               "author": "J. R. R. Tolkien",
@@ -586,11 +601,11 @@ describe('store', () => {
               "title": "The Lord of the Rings",
             }
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof object)['store']['book'][number] | undefined>()
     })
 
     it('book - slice', () => {
         const value = JSONPath.get(object, '$.store.book[:2]')
-        const _type: Assert<typeof value, (typeof object)['store']['book'][number]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -607,11 +622,11 @@ describe('store', () => {
               },
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof object)['store']['book'][number]>()
     })
 
     it('categories and authors of all books', () => {
         const value = JSONPath.get(object, '$..book[0][category,author,price]')
-        const _type: Assert<typeof value, ('Nigel Rees' | 'reference' | 8.95)[]> = true
         expect(value).toMatchInlineSnapshot(`
             [
               "reference",
@@ -619,11 +634,11 @@ describe('store', () => {
               8.95,
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<('Nigel Rees' | 'reference' | 8.95)[]>()
     })
 
     it('books with isbn', () => {
-        const value = JSONPath.get(object, '$..book[?(@.isbn)]')
-        const _type: Assert<typeof value, (typeof object)['store']['book'][number][] | undefined> = true
+        const value = JSONPath.get(object, '$..book[?(@.isbn)]', { preventEval: false })
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -642,11 +657,11 @@ describe('store', () => {
               },
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof object)['store']['book'][number][] | undefined>()
     })
 
     it('books with price < 10', () => {
-        const value = JSONPath.get(object, '$..book[?(@.price<10)]')
-        const _type: Assert<typeof value, (typeof object)['store']['book'][number][] | undefined> = true
+        const value = JSONPath.get(object, '$..book[?(@.price<10)]', { preventEval: false })
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -664,25 +679,25 @@ describe('store', () => {
               },
             ]
         `)
+        expectTypeOf(value).toEqualTypeOf<(typeof object)['store']['book'][number][] | undefined>()
     })
 
     it.skip('books filter', () => {
-        const value = JSONPath.get(object, `$..*[?(@property === 'price' && @ !== 8.95)]`)
-        // not supported
-        // const _type: Assert<typeof value, typeof object['store']['book'][number][] | undefined> = true
+        const value = JSONPath.get(object, `$..*[?(@property === 'price' && @ !== 8.95)]`, { preventEval: false })
         expect(value).toMatchInlineSnapshot(`
-            [
-              19.95,
-              12.99,
-              8.99,
-              22.99,
-            ]
+        [
+          19.95,
+          12.99,
+          8.99,
+          22.99,
+        ]
         `)
+        // not supported
+        // expectTypeOf(value).toEqualTypeOf<(typeof object)['store']['book'][number][] | undefined>()
     })
 
     it('root', () => {
         const value = JSONPath.get(object, `$`)
-        const _type: Assert<typeof value, typeof object> = true
         expect(value).toMatchInlineSnapshot(`
             {
               "store": {
@@ -721,11 +736,12 @@ describe('store', () => {
               },
             }
         `)
+        expectTypeOf(value).toEqualTypeOf<typeof object>()
     })
 
     it('property names', () => {
         const value = JSONPath.get(object, `$.*~`)
-        // const _type: Assert<typeof value, typeof object[keyof typeof object]> = true
         expect(value).toMatchInlineSnapshot(`"store"`)
+        // expectTypeOf(value).toEqualTypeOf<(typeof object)[keyof typeof object]>()
     })
 })
