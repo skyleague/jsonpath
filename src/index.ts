@@ -96,7 +96,21 @@ export type JSONPathValue<T, P extends string> = P extends `${infer Start}.${inf
       : never
 
 export const JSONPath = {
-    get: function <T, P extends string>(json: T, path: P): JSONPathValue<T, P> {
-        return JSONPathPlus({ json: json as JSONPathOptions['path'], path, wrap: false })
+    get: function <T, P extends string>(
+        json: T,
+        path: P,
+        options: Omit<JSONPathOptions, 'json' | 'path'> = {}
+    ): JSONPathValue<T, P> {
+        const result: any[] = JSONPathPlus({
+            json: json as JSONPathOptions['path'],
+            path,
+            wrap: false,
+            preventEval: true,
+            ...options,
+        })
+        if (path.includes('..') || path.includes('[*]')) {
+            return (result ?? []) as JSONPathValue<T, P>
+        }
+        return result as JSONPathValue<T, P>
     },
 }
