@@ -1,6 +1,6 @@
 import { JSONPath } from './index.js'
 
-import type { DeepPartial } from '@skyleague/axioms'
+import { forAll, type DeepPartial, float, string, boolean } from '@skyleague/axioms'
 import { expect, describe, it, expectTypeOf } from 'vitest'
 
 describe('simple', () => {
@@ -743,5 +743,41 @@ describe('store', () => {
         const value = JSONPath.get(object, `$.*~`)
         expect(value).toMatchInlineSnapshot(`"store"`)
         // expectTypeOf(value).toEqualTypeOf<(typeof object)[keyof typeof object]>()
+    })
+
+    it('root on primitive - number', () => {
+        forAll(float(), (x) => {
+            const value = JSONPath.get(x, `$`)
+            expect(value).toEqual(x)
+            expectTypeOf(value).toEqualTypeOf<number>()
+
+            const valueArray = JSONPath.get([x], `$`)
+            expect(valueArray).toEqual([x])
+            expectTypeOf(valueArray).toEqualTypeOf<number[]>()
+        })
+    })
+
+    it('root on primitive - string', () => {
+        forAll(string(), (x) => {
+            const value = JSONPath.get(x, `$`)
+            expect(value).toEqual(x)
+            expectTypeOf(value).toEqualTypeOf<string>()
+
+            const valueArray = JSONPath.get([x], `$`)
+            expect(valueArray).toEqual([x])
+            expectTypeOf(valueArray).toEqualTypeOf<string[]>()
+        })
+    })
+
+    it('root on primitive - boolean', () => {
+        forAll(boolean(), (x) => {
+            const value = JSONPath.get(x, `$`)
+            expect(value).toEqual(x)
+            expectTypeOf(value).toEqualTypeOf<boolean>()
+
+            const valueArray = JSONPath.get([x], `$`)
+            expect(valueArray).toEqual([x])
+            expectTypeOf(valueArray).toEqualTypeOf<boolean[]>()
+        })
     })
 })
