@@ -101,6 +101,9 @@ export const JSONPath = {
         path: P,
         options: Omit<JSONPathOptions, 'json' | 'path'> = {}
     ): JSONPathValue<T, P> {
+        if (path === '$') {
+            return json as JSONPathValue<T, P>
+        }
         const result: any[] = JSONPathPlus({
             json: json as JSONPathOptions['path'],
             path,
