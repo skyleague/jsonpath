@@ -5,6 +5,7 @@ export type Root = '$'
 
 type BrandAsOptional<T, Wrapped extends boolean> = Wrapped extends true ? BrandedOptional | T : T | undefined
 
+// biome-ignore lint/suspicious/noExplicitAny: any is required for type inference
 type PathArrayIndex<T extends ArrayLike<any>, Index extends string, P extends string, Wrapped extends boolean> = Index extends `*`
     ? Wrapped extends true
         ? PathValueAccessor<T[number], P>
@@ -25,6 +26,7 @@ type PathArrayIndex<T extends ArrayLike<any>, Index extends string, P extends st
                   : (PathArrayIndex<T, First, P, Wrapped> | PathArrayIndex<T, Rest, P, Wrapped>)[]
               : never
 
+// biome-ignore lint/suspicious/noExplicitAny: any is required for type inference
 type PathRecordIndex<T, Index extends string, P extends string, Wrapped extends boolean> = T extends Record<PropertyKey, any>
     ? Index extends keyof T
         ? T[Index] // foo[bar] like with direct property name
@@ -35,6 +37,7 @@ type PathRecordIndex<T, Index extends string, P extends string, Wrapped extends 
           : never
     : never
 
+// biome-ignore lint/suspicious/noExplicitAny: any is required for type inference
 type PathValueIndex<T, Index extends string, P extends string, Wrapped extends boolean> = T extends ArrayLike<any>
     ? PathArrayIndex<T, Index, P, Wrapped>
     : PathRecordIndex<T, Index, P, Wrapped>
@@ -45,26 +48,29 @@ type PathValueChildIndex<T, K extends string, Index extends string, P extends st
       ? PathValueIndex<T[K], Index, P, Wrapped>
       : never
 
+// biome-ignore lint/suspicious/noExplicitAny: any is required for type inference
 type PathRecursiveDescent<T, P extends string> = T extends readonly any[]
     ? PathRecursiveDescent<T[number], P> | PathValueAccessor<T, P, true>
-    : T extends Record<PropertyKey, any>
+    : // biome-ignore lint/suspicious/noExplicitAny: any is required for type inference
+      T extends Record<PropertyKey, any>
       ? PathRecursiveDescent<T[keyof T], P> | PathValueAccessor<T, P, true>
       : never
 
+// biome-ignore lint/suspicious/noExplicitAny: any is required for type inference
 type PathWildCard<T> = T extends readonly any[] ? T[number] : T extends Record<PropertyKey, any> ? T[keyof T] : T
 
 type PathValueChild<T, K extends string, P extends string, Wrapped extends boolean> = K extends `[${infer Index}]`
     ? PathValueIndex<T, Index, P, Wrapped>
     : K extends `${infer A}[${infer Index}]`
       ? PathValueChildIndex<T, A, Index, P, Wrapped>
-      : K extends keyof T
-        ? undefined extends T[K]
-            ? PathValueAccessor<Exclude<T[K], undefined>, P, Wrapped> | undefined
-            : PathValueAccessor<T[K], P, Wrapped>
-        : K extends `*${infer Rest}`
-          ? Wrapped extends true
-              ? PathValueAccessor<PathWildCard<T>, `${Rest}${P}`, Wrapped>
-              : PathValueAccessor<PathWildCard<T>, `${Rest}${P}`, Wrapped>[]
+      : K extends `*${infer Rest}`
+        ? Wrapped extends true
+            ? PathValueAccessor<PathWildCard<T>, `${Rest}${P}`, Wrapped>
+            : PathValueAccessor<PathWildCard<T>, `${Rest}${P}`, Wrapped>[]
+        : K extends keyof T
+          ? undefined extends T[K]
+              ? PathValueAccessor<Exclude<T[K], undefined>, P, Wrapped> | undefined
+              : PathValueAccessor<T[K], P, Wrapped>
           : never
 
 const BrandedOptional = Symbol.for('(optional)')
@@ -96,19 +102,17 @@ export type JSONPathValue<T, P extends string> = P extends `${infer Start}.${inf
       : never
 
 export const JSONPath = {
-    get: function <T, P extends string>(
-        json: T,
-        path: P,
-        options: Omit<JSONPathOptions, 'json' | 'path'> = {}
-    ): JSONPathValue<T, P> {
+    get: <T, P extends string>(json: T, path: P, options: Omit<JSONPathOptions, 'json' | 'path'> = {}): JSONPathValue<T, P> => {
         if (path === '$') {
             return json as JSONPathValue<T, P>
         }
+
+        // biome-ignore lint/suspicious/noExplicitAny: any is required for type inference
         const result: any[] = JSONPathPlus({
             json: json as JSONPathOptions['path'],
             path,
             wrap: false,
-            preventEval: true,
+            eval: false,
             ...options,
         })
         if (path.includes('..') || path.includes('[*]')) {

@@ -1,7 +1,7 @@
 import { JSONPath } from './index.js'
 
-import { forAll, type DeepPartial, float, string, boolean } from '@skyleague/axioms'
-import { expect, describe, it, expectTypeOf } from 'vitest'
+import { type DeepPartial, boolean, float, forAll, string } from '@skyleague/axioms'
+import { describe, expect, expectTypeOf, it } from 'vitest'
 
 describe('simple', () => {
     const simpleObject = {
@@ -89,27 +89,27 @@ describe('simple', () => {
 
     it('properties - array number index - does not exist', () => {
         const value = JSONPath.get(simpleArray, '$.foos[100]')
-        expect(value).toMatchInlineSnapshot(`undefined`)
+        expect(value).toMatchInlineSnapshot('undefined')
         expectTypeOf(value).toEqualTypeOf<(typeof simpleArray)['foos'][number] | undefined>()
     })
 
     it('properties - array number index - does not exist', () => {
         const xs = { xs: [1, 2, 3] }
         const value = JSONPath.get(xs, '$.xs[100]')
-        expect(value).toMatchInlineSnapshot(`undefined`)
+        expect(value).toMatchInlineSnapshot('undefined')
         expectTypeOf(value).toEqualTypeOf<number | undefined>()
     })
 
     it('properties - emtpy array', () => {
         const value = JSONPath.get({ foos: [] as { a: number }[] } as const, '$.foos[*].a')
-        expect(value).toMatchInlineSnapshot(`[]`)
+        expect(value).toMatchInlineSnapshot('[]')
         expectTypeOf(value).toEqualTypeOf<number[]>()
     })
 
     it('properties - tuple number index - does not exist', () => {
         const xs = { xs: [1, 2, 3] as const }
         const value = JSONPath.get(xs, '$.xs[100]')
-        expect(value).toMatchInlineSnapshot(`undefined`)
+        expect(value).toMatchInlineSnapshot('undefined')
         // should ideally be undefined
         expectTypeOf(value).toEqualTypeOf<1 | 2 | 3 | undefined>()
     })
@@ -117,7 +117,7 @@ describe('simple', () => {
     it('properties - tuple number index - does exist', () => {
         const xs = { xs: [1, 2, 3] as const }
         const value = JSONPath.get(xs, '$.xs[1]')
-        expect(value).toMatchInlineSnapshot(`2`)
+        expect(value).toMatchInlineSnapshot('2')
         expectTypeOf(value).toEqualTypeOf<2>()
     })
 
@@ -279,7 +279,7 @@ describe('simple', () => {
 
     it('script index', () => {
         type T = typeof deepNested
-        const value = JSONPath.get(deepNested, '$.foos[(@.length-1)]', { preventEval: false })
+        const value = JSONPath.get(deepNested, '$.foos[(@.length-1)]', { eval: true })
         expect(value).toMatchInlineSnapshot(`
             {
               "foo": "bars",
@@ -575,7 +575,7 @@ describe('store', () => {
     })
 
     it('book - script index', () => {
-        const value = JSONPath.get(object, '$..book[(@.length-1)]', { preventEval: false })
+        const value = JSONPath.get(object, '$..book[(@.length-1)]', { eval: true })
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -591,7 +591,7 @@ describe('store', () => {
     })
 
     it('book - script full index', () => {
-        const value = JSONPath.get(object, '$.store.book[(@.length-1)]', { preventEval: false })
+        const value = JSONPath.get(object, '$.store.book[(@.length-1)]', { eval: true })
         expect(value).toMatchInlineSnapshot(`
             {
               "author": "J. R. R. Tolkien",
@@ -638,7 +638,7 @@ describe('store', () => {
     })
 
     it('books with isbn', () => {
-        const value = JSONPath.get(object, '$..book[?(@.isbn)]', { preventEval: false })
+        const value = JSONPath.get(object, '$..book[?(@.isbn)]', { eval: true })
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -661,7 +661,7 @@ describe('store', () => {
     })
 
     it('books with price < 10', () => {
-        const value = JSONPath.get(object, '$..book[?(@.price<10)]', { preventEval: false })
+        const value = JSONPath.get(object, '$..book[?(@.price<10)]', { eval: true })
         expect(value).toMatchInlineSnapshot(`
             [
               {
@@ -683,7 +683,7 @@ describe('store', () => {
     })
 
     it.skip('books filter', () => {
-        const value = JSONPath.get(object, `$..*[?(@property === 'price' && @ !== 8.95)]`, { preventEval: false })
+        const value = JSONPath.get(object, `$..*[?(@property === 'price' && @ !== 8.95)]`, { eval: true })
         expect(value).toMatchInlineSnapshot(`
         [
           19.95,
@@ -697,7 +697,7 @@ describe('store', () => {
     })
 
     it('root', () => {
-        const value = JSONPath.get(object, `$`)
+        const value = JSONPath.get(object, '$')
         expect(value).toMatchInlineSnapshot(`
             {
               "store": {
@@ -740,18 +740,18 @@ describe('store', () => {
     })
 
     it('property names', () => {
-        const value = JSONPath.get(object, `$.*~`)
+        const value = JSONPath.get(object, '$.*~')
         expect(value).toMatchInlineSnapshot(`"store"`)
         // expectTypeOf(value).toEqualTypeOf<(typeof object)[keyof typeof object]>()
     })
 
     it('root on primitive - number', () => {
         forAll(float(), (x) => {
-            const value = JSONPath.get(x, `$`)
+            const value = JSONPath.get(x, '$')
             expect(value).toEqual(x)
             expectTypeOf(value).toEqualTypeOf<number>()
 
-            const valueArray = JSONPath.get([x], `$`)
+            const valueArray = JSONPath.get([x], '$')
             expect(valueArray).toEqual([x])
             expectTypeOf(valueArray).toEqualTypeOf<number[]>()
         })
@@ -759,11 +759,11 @@ describe('store', () => {
 
     it('root on primitive - string', () => {
         forAll(string(), (x) => {
-            const value = JSONPath.get(x, `$`)
+            const value = JSONPath.get(x, '$')
             expect(value).toEqual(x)
             expectTypeOf(value).toEqualTypeOf<string>()
 
-            const valueArray = JSONPath.get([x], `$`)
+            const valueArray = JSONPath.get([x], '$')
             expect(valueArray).toEqual([x])
             expectTypeOf(valueArray).toEqualTypeOf<string[]>()
         })
@@ -771,13 +771,30 @@ describe('store', () => {
 
     it('root on primitive - boolean', () => {
         forAll(boolean(), (x) => {
-            const value = JSONPath.get(x, `$`)
+            const value = JSONPath.get(x, '$')
             expect(value).toEqual(x)
             expectTypeOf(value).toEqualTypeOf<boolean>()
 
-            const valueArray = JSONPath.get([x], `$`)
+            const valueArray = JSONPath.get([x], '$')
             expect(valueArray).toEqual([x])
             expectTypeOf(valueArray).toEqualTypeOf<boolean[]>()
         })
+    })
+})
+
+describe('other', () => {
+    it('record', () => {
+        const objects: Record<string, { price: number; other?: { price: number } }> = {
+            a: { price: 1 },
+            b: { price: 2, other: { price: 3 } },
+        }
+        const value = JSONPath.get(objects, '$.*.price')
+        expect(value).toMatchInlineSnapshot(`
+          [
+            1,
+            2,
+          ]
+        `)
+        expectTypeOf(value).toEqualTypeOf<number[]>()
     })
 })
