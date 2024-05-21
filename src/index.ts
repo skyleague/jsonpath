@@ -115,7 +115,7 @@ export const JSONPath = {
             eval: false,
             ...options,
         })
-        if (path.includes('..') || path.includes('[*]')) {
+        if (path.includes('..') || path.includes('[*]') || path.includes('.*')) {
             return (result ?? []) as JSONPathValue<T, P>
         }
         return result as JSONPathValue<T, P>
