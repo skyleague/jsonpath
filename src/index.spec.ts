@@ -1,6 +1,6 @@
 import { JSONPath } from './index.js'
 
-import { type DeepPartial, boolean, float, forAll, string } from '@skyleague/axioms'
+import { boolean, float, forAll, string } from '@skyleague/axioms'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 
 describe('simple', () => {
@@ -67,7 +67,7 @@ describe('simple', () => {
     })
 
     it('properties - partial array wildcard acessor', () => {
-        const value = JSONPath.get(simpleArray as DeepPartial<typeof simpleArray>, '$.foos[*].foo')
+        const value = JSONPath.get(simpleArray as Partial<typeof simpleArray>, '$.foos[*].foo')
         expect(value).toMatchInlineSnapshot(`
             [
               "barz",
@@ -156,7 +156,7 @@ describe('simple', () => {
     })
 
     it('properties - deep partial', () => {
-        const dSimpleNested: DeepPartial<typeof simpleNested> = simpleNested
+        const dSimpleNested: Partial<typeof simpleNested> = simpleNested
         const value = JSONPath.get(dSimpleNested, '$.far.foos')
         expect(value).toMatchInlineSnapshot(`
             [
@@ -172,7 +172,7 @@ describe('simple', () => {
     })
 
     it('properties - deep partial nested access', () => {
-        const dSimpleNested: DeepPartial<typeof simpleNested> = simpleNested
+        const dSimpleNested: Partial<typeof simpleNested> = simpleNested
         const value = JSONPath.get(dSimpleNested, '$.far.foos[*].foo')
         expect(value).toMatchInlineSnapshot(`
             [

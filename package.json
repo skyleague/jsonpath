@@ -23,22 +23,22 @@
     "check:coverage": "vitest run --coverage=true",
     "check:project": "node-standards lint",
     "check:types": "tsc -p tsconfig.json",
-    "lint": "biome check src test examples",
-    "lint:fix": "npm run lint -- --apply-unsafe",
-    "package": "rm -rf .dist && npm run build",
+    "lint": "biome check",
+    "lint:fix": "node --run lint -- --write --unsafe",
+    "package": "rm -rf .dist && node --run build",
     "prepare": "husky || true",
     "test": "vitest run"
   },
   "dependencies": {
-    "jsonpath-plus": "^9.0.0"
+    "jsonpath-plus": "^10.2.0"
   },
   "devDependencies": {
-    "@skyleague/axioms": "^4.3.2",
-    "@skyleague/node-standards": "^7.0.2",
-    "typescript": "^5.4.5"
+    "@skyleague/axioms": "^6.1.0",
+    "@skyleague/node-standards": "^9.4.0",
+    "typescript": "5.7.2"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "publishConfig": {
     "access": "public",
